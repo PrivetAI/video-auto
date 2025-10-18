@@ -165,6 +165,123 @@
       color: white;
     }
 
+    .inline-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .inline-actions button {
+      flex: 0 0 auto;
+    }
+
+    .whisper-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .whisper-card {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .whisper-card h3 {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .list-box {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      background: #fff;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+
+    .list-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .list-box li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background: #4CAF50;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .badge.warn {
+      background: #f39c12;
+    }
+
+    .tiny-btn {
+      background: #2196F3;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .tiny-btn:hover {
+      background: #0b7dda;
+    }
+
+    .whisper-result {
+      font-size: 13px;
+      background: #f9f9f9;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      padding: 8px;
+      min-height: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .whisper-result code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .whisper-result a {
+      color: #2196F3;
+      text-decoration: none;
+    }
+
+    .whisper-result a:hover {
+      text-decoration: underline;
+    }
+
+    .checkbox-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .whisper-status {
+      margin-top: 15px;
+    }
+
     button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
@@ -292,6 +409,19 @@
       button {
         width: 100%;
       }
+
+      .whisper-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .inline-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .inline-actions button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -355,6 +485,100 @@
       </div>
     </form>
 
+    <fieldset>
+      <legend>Whisper-TikTok API Tools</legend>
+      <div class="whisper-grid">
+        <div class="whisper-card">
+          <h3>Backgrounds</h3>
+          <label>
+            Download URL:
+            <input type="text" id="backgroundUrl" placeholder="https://www.youtube.com/watch?v=..." />
+          </label>
+          <div class="inline-actions">
+            <button type="button" id="downloadBackgroundBtn" class="btn-secondary">Download</button>
+            <button type="button" id="refreshBackgroundsBtn" class="btn-secondary">Refresh</button>
+          </div>
+          <div class="list-box" id="backgroundList">Background list not loaded yet.</div>
+        </div>
+
+        <div class="whisper-card">
+          <h3>Text-to-Speech</h3>
+          <label>
+            Output filename:
+            <input type="text" id="ttsOutputFile" placeholder="my_audio.mp3" />
+          </label>
+          <label>
+            Voice:
+            <select id="ttsVoice">
+              <option value="">Use project default</option>
+            </select>
+          </label>
+          <label>
+            Text:
+            <textarea id="ttsText" placeholder="Enter narration text for TTS"></textarea>
+          </label>
+          <button type="button" id="generateTtsBtn" class="btn-secondary">Generate Audio</button>
+          <div class="whisper-result" id="ttsResult"></div>
+        </div>
+
+        <div class="whisper-card">
+          <h3>Subtitles</h3>
+          <label>
+            Audio filename:
+            <input type="text" id="subtitlesAudioFile" placeholder="my_audio.mp3" />
+            <span class="helper-text">Use filename from the TTS response</span>
+          </label>
+          <label>
+            Model:
+            <select id="subtitlesModel">
+              <option value="tiny">tiny</option>
+              <option value="base" selected>base</option>
+              <option value="small">small</option>
+              <option value="medium">medium</option>
+              <option value="large">large</option>
+            </select>
+          </label>
+          <label class="checkbox-inline">
+            <input type="checkbox" id="subtitlesNonEnglish" />
+            Non-English audio
+          </label>
+          <label>
+            UUID:
+            <input type="text" id="subtitlesUuid" placeholder="Auto-generated" />
+          </label>
+          <button type="button" id="generateSubtitlesBtn" class="btn-secondary">Generate Subtitles</button>
+          <div class="whisper-result" id="subtitlesResult"></div>
+        </div>
+
+        <div class="whisper-card">
+          <h3>Create Video</h3>
+          <label>
+            Background filename:
+            <input type="text" id="videoBackgroundFile" placeholder="background.mp4" />
+            <span class="helper-text">Select from the background list</span>
+          </label>
+          <label>
+            Audio path:
+            <input type="text" id="videoAudioPath" placeholder="/app/media/my_audio.mp3" />
+          </label>
+          <label>
+            Subtitles path:
+            <input type="text" id="videoSubtitlesPath" placeholder="/app/media/my_video.ass" />
+          </label>
+          <label>
+            Download filename:
+            <input type="text" id="videoDownloadFile" value="output.mp4" />
+          </label>
+          <div class="inline-actions">
+            <button type="button" id="createRemoteVideoBtn" class="btn-secondary">Create Video</button>
+            <button type="button" id="downloadRemoteVideoBtn" class="btn-secondary">Download Video</button>
+          </div>
+          <div class="whisper-result" id="videoResult"></div>
+        </div>
+      </div>
+      <div id="whisperGlobalStatus" class="status-box whisper-status" style="display:none;"></div>
+    </fieldset>
+
     <!-- Status Section -->
     <div id="statusSection" style="display:none;">
       <div class="status-box">
@@ -392,6 +616,8 @@
     let slideCount = 0;
     let availableVoices = [];
     let voicesLoaded = false;
+    let whisperBackgrounds = [];
+    let latestTtsInfo = null;
 
     const FALLBACK_VOICES = [
       { id: 'ru-RU-DmitryNeural', label: 'Dmitry (RU Male)', language: 'ru-RU', gender: 'Male' },
@@ -402,6 +628,7 @@
       await initializeVoices();
       addSlide();
       refreshVoiceSelectors();
+      await refreshBackgrounds(true);
     });
 
     // Add slide button
@@ -418,6 +645,14 @@
 
     // Language change updates voice options
     document.getElementById('language').addEventListener('change', refreshVoiceSelectors);
+
+    // Whisper-TikTok helpers
+    document.getElementById('downloadBackgroundBtn').addEventListener('click', downloadBackground);
+    document.getElementById('refreshBackgroundsBtn').addEventListener('click', () => refreshBackgrounds(false));
+    document.getElementById('generateTtsBtn').addEventListener('click', generateWhisperTTS);
+    document.getElementById('generateSubtitlesBtn').addEventListener('click', generateSubtitles);
+    document.getElementById('createRemoteVideoBtn').addEventListener('click', createWhisperVideo);
+    document.getElementById('downloadRemoteVideoBtn').addEventListener('click', downloadRemoteVideo);
 
     async function initializeVoices() {
       try {
@@ -449,6 +684,7 @@
       const voicesForLanguage = getVoicesForLanguage(language);
       populateDefaultVoiceSelect(voicesForLanguage);
       refreshSlideVoiceSelectors(voicesForLanguage);
+      populateTtsVoiceOptions(voicesForLanguage);
     }
 
     function getVoicesForLanguage(language) {
@@ -536,6 +772,43 @@
       }
     }
 
+    function populateTtsVoiceOptions(voices) {
+      const select = document.getElementById('ttsVoice');
+      if (!select) {
+        return;
+      }
+
+      const previousValue = select.value;
+      select.innerHTML = '';
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = 'Use project default';
+      select.appendChild(defaultOption);
+
+      if (!voices || voices.length === 0) {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = voicesLoaded ? 'No voices available' : 'No fallback voices';
+        select.appendChild(placeholder);
+        select.value = '';
+        return;
+      }
+
+      voices.forEach((voice) => {
+        const option = document.createElement('option');
+        option.value = voice.id;
+        option.textContent = formatVoiceLabel(voice);
+        select.appendChild(option);
+      });
+
+      if (previousValue && voices.some((voice) => voice.id === previousValue)) {
+        select.value = previousValue;
+      } else {
+        select.value = '';
+      }
+    }
+
     function formatVoiceLabel(voice) {
       const parts = [voice.label || voice.id];
       if (voice.language) {
@@ -545,6 +818,349 @@
         parts.push(voice.gender);
       }
       return parts.join(' • ');
+    }
+
+    function showWhisperStatus(message, type = 'info') {
+      const box = document.getElementById('whisperGlobalStatus');
+      if (!box) {
+        return;
+      }
+      if (!message) {
+        box.style.display = 'none';
+        return;
+      }
+      box.style.display = 'block';
+      if (type === 'error') {
+        box.className = 'error-box whisper-status';
+      } else if (type === 'success') {
+        box.className = 'success-box whisper-status';
+      } else {
+        box.className = 'status-box whisper-status';
+      }
+      box.textContent = message;
+    }
+
+    function renderBackgroundList(items) {
+      const container = document.getElementById('backgroundList');
+      if (!container) {
+        return;
+      }
+
+      if (!items || items.length === 0) {
+        container.textContent = 'No backgrounds available yet.';
+        return;
+      }
+
+      const list = document.createElement('ul');
+      items.forEach((item) => {
+        const li = document.createElement('li');
+
+        const name = document.createElement('span');
+        name.textContent = item.name;
+        li.appendChild(name);
+
+        const badge = document.createElement('span');
+        badge.className = `badge ${item.exists ? '' : 'warn'}`.trim();
+        badge.textContent = item.exists ? 'ready' : 'missing';
+        li.appendChild(badge);
+
+        if (item.local_path) {
+          const path = document.createElement('code');
+          path.textContent = item.local_path;
+          li.appendChild(path);
+        }
+
+        const preview = document.createElement('a');
+        preview.href = `/api/whisper/backgrounds/${encodeURIComponent(item.name)}`;
+        preview.target = '_blank';
+        preview.textContent = 'Preview';
+        li.appendChild(preview);
+
+        const useBtn = document.createElement('button');
+        useBtn.type = 'button';
+        useBtn.className = 'tiny-btn';
+        useBtn.textContent = 'Use';
+        useBtn.addEventListener('click', () => {
+          const backgroundInput = document.getElementById('videoBackgroundFile');
+          if (backgroundInput) {
+            backgroundInput.value = item.name;
+          }
+          showWhisperStatus(`Background set to ${item.name}`, 'success');
+        });
+        li.appendChild(useBtn);
+
+        list.appendChild(li);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(list);
+
+      const backgroundInput = document.getElementById('videoBackgroundFile');
+      if (backgroundInput && !backgroundInput.value && items.length > 0) {
+        backgroundInput.value = items[0].name;
+      }
+    }
+
+    async function refreshBackgrounds(initialLoad = false) {
+      try {
+        const response = await fetch('/api/whisper/backgrounds');
+        if (!response.ok) {
+          throw new Error(`Status ${response.status}`);
+        }
+        const data = await response.json();
+        whisperBackgrounds = Array.isArray(data.items) ? data.items : [];
+        renderBackgroundList(whisperBackgrounds);
+        if (!initialLoad) {
+          showWhisperStatus('Background list updated.', 'success');
+        }
+      } catch (error) {
+        console.error('Failed to load backgrounds:', error);
+        if (!initialLoad) {
+          showWhisperStatus(error.message || 'Failed to load backgrounds.', 'error');
+        }
+      }
+    }
+
+    async function downloadBackground() {
+      const input = document.getElementById('backgroundUrl');
+      const url = input ? input.value.trim() : '';
+      if (!url) {
+        showWhisperStatus('Provide a video URL to download.', 'error');
+        return;
+      }
+
+      showWhisperStatus('Downloading background...', 'info');
+      try {
+        const response = await fetch('/api/whisper/backgrounds/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Status ${response.status}`);
+        }
+
+        const result = await response.json();
+        showWhisperStatus(result.message || 'Background downloaded successfully.', 'success');
+        if (input) {
+          input.value = '';
+        }
+        await refreshBackgrounds(false);
+      } catch (error) {
+        console.error('Background download failed:', error);
+        showWhisperStatus(error.message || 'Failed to download background.', 'error');
+      }
+    }
+
+    function setWhisperResult(elementId, html, type = 'info') {
+      const el = document.getElementById(elementId);
+      if (!el) {
+        return;
+      }
+      el.innerHTML = html || '';
+      if (type === 'error') {
+        el.style.borderColor = '#c0392b';
+      } else if (type === 'success') {
+        el.style.borderColor = '#4CAF50';
+      } else {
+        el.style.borderColor = '#ccc';
+      }
+    }
+
+    function getProjectVoice() {
+      const select = document.getElementById('defaultVoice');
+      return select ? (select.value || select.dataset.default || '') : '';
+    }
+
+    async function generateWhisperTTS() {
+      const textValue = document.getElementById('ttsText').value.trim();
+      if (!textValue) {
+        setWhisperResult('ttsResult', 'Please enter text to convert to speech.', 'error');
+        return;
+      }
+
+      setWhisperResult('ttsResult', 'Generating audio, please wait...', 'info');
+
+      const payload = { text: textValue };
+      const outputName = document.getElementById('ttsOutputFile').value.trim();
+      const selectedVoice = document.getElementById('ttsVoice').value || getProjectVoice();
+      if (outputName) {
+        payload.outfile = outputName;
+      }
+      if (selectedVoice) {
+        payload.voice = selectedVoice;
+      }
+
+      try {
+        const response = await fetch('/api/whisper/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Status ${response.status}`);
+        }
+
+        const result = await response.json();
+        latestTtsInfo = result;
+
+        const remotePath = result.filename || '';
+        const localPath = result.local_path || '';
+        const fileName = remotePath ? remotePath.split('/').pop() : (outputName || 'output.mp3');
+
+        let html = '<strong>Audio generated successfully.</strong>';
+        if (remotePath) {
+          html += `<span>Remote path: <code>${remotePath}</code></span>`;
+        }
+        if (localPath) {
+          html += `<span>Shared path: <code>${localPath}</code></span>`;
+        }
+        if (fileName) {
+          html += `<a href="/api/whisper/tts/${encodeURIComponent(fileName)}" target="_blank">Download audio</a>`;
+        }
+
+        setWhisperResult('ttsResult', html, 'success');
+
+        if (fileName) {
+          const audioInput = document.getElementById('subtitlesAudioFile');
+          if (audioInput) {
+            audioInput.value = fileName;
+          }
+        }
+        if (remotePath) {
+          const audioPathInput = document.getElementById('videoAudioPath');
+          if (audioPathInput) {
+            audioPathInput.value = remotePath;
+          }
+        }
+      } catch (error) {
+        console.error('TTS generation failed:', error);
+        setWhisperResult('ttsResult', error.message || 'Failed to generate audio.', 'error');
+      }
+    }
+
+    async function generateSubtitles() {
+      const filename = document.getElementById('subtitlesAudioFile').value.trim();
+      if (!filename) {
+        setWhisperResult('subtitlesResult', 'Provide the audio filename first.', 'error');
+        return;
+      }
+
+      const model = document.getElementById('subtitlesModel').value;
+      const uuidValue = document.getElementById('subtitlesUuid').value.trim();
+      const nonEnglish = document.getElementById('subtitlesNonEnglish').checked;
+
+      setWhisperResult('subtitlesResult', 'Generating subtitles...', 'info');
+
+      const params = new URLSearchParams({
+        filename,
+        model,
+        non_english: nonEnglish ? 'true' : 'false',
+      });
+      if (uuidValue) {
+        params.set('uuid_value', uuidValue);
+      }
+
+      try {
+        const response = await fetch(`/api/whisper/subtitles?${params.toString()}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Status ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.uuid) {
+          document.getElementById('subtitlesUuid').value = result.uuid;
+        }
+
+        if (result.remote_ass_path) {
+          const subsInput = document.getElementById('videoSubtitlesPath');
+          if (subsInput) {
+            subsInput.value = result.remote_ass_path;
+          }
+        }
+
+        const uuidParam = encodeURIComponent(result.uuid);
+        let html = '<strong>Subtitles generated successfully.</strong>';
+        if (result.remote_ass_path) {
+          html += `<span>ASS path: <code>${result.remote_ass_path}</code></span>`;
+        }
+        if (result.remote_vtt_path) {
+          html += `<span>VTT path: <code>${result.remote_vtt_path}</code></span>`;
+        }
+        html += `<a href="/api/whisper/subtitles/file/${uuidParam}?kind=ass" target="_blank">Download ASS</a>`;
+        html += `<a href="/api/whisper/subtitles/file/${uuidParam}?kind=vtt" target="_blank">Download VTT</a>`;
+
+        setWhisperResult('subtitlesResult', html, 'success');
+      } catch (error) {
+        console.error('Subtitle generation failed:', error);
+        setWhisperResult('subtitlesResult', error.message || 'Failed to generate subtitles.', 'error');
+      }
+    }
+
+    async function createWhisperVideo() {
+      const background = document.getElementById('videoBackgroundFile').value.trim();
+      const audio = document.getElementById('videoAudioPath').value.trim();
+      const subtitles = document.getElementById('videoSubtitlesPath').value.trim();
+
+      if (!background || !audio || !subtitles) {
+        setWhisperResult('videoResult', 'Provide background, audio, and subtitle paths.', 'error');
+        return;
+      }
+
+      setWhisperResult('videoResult', 'Submitting video creation request...', 'info');
+
+      try {
+        const response = await fetch('/api/whisper/video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            background_file: background,
+            audio_file: audio,
+            subtitles_file: subtitles,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Status ${response.status}`);
+        }
+
+        let result = {};
+        try {
+          result = await response.json();
+        } catch (jsonError) {
+          console.warn('Video response not JSON:', jsonError);
+        }
+
+        let html = `<strong>${result.message || 'Video request sent.'}</strong>`;
+        if (result.path) {
+          html += `<span>Path: <code>${result.path}</code></span>`;
+          const fileName = result.path.split('/').pop();
+          if (fileName) {
+            document.getElementById('videoDownloadFile').value = fileName;
+          }
+        }
+        setWhisperResult('videoResult', html, 'success');
+        showWhisperStatus(result.message || 'Video processing started.', 'success');
+      } catch (error) {
+        console.error('Video creation failed:', error);
+        setWhisperResult('videoResult', error.message || 'Failed to create video.', 'error');
+        showWhisperStatus(error.message || 'Video creation failed.', 'error');
+      }
+    }
+
+    function downloadRemoteVideo() {
+      const filename = document.getElementById('videoDownloadFile').value.trim();
+      if (!filename) {
+        setWhisperResult('videoResult', 'Enter the filename to download.', 'error');
+        return;
+      }
+      window.open(`/api/whisper/video/${encodeURIComponent(filename)}`, '_blank');
     }
 
     function addSlide() {

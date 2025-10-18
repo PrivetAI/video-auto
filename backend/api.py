@@ -7,7 +7,7 @@ from datetime import datetime
 import httpx
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -51,8 +51,21 @@ class TaskStatus(BaseModel):
     message: str = ""
     output_path: Optional[str] = None
 
+class DownloadVideoRequest(BaseModel):
+    url: str
+
+class GenerateTTSRequest(BaseModel):
+    text: str
+    outfile: Optional[str] = None
+    voice: Optional[str] = None
+
+class CreateVideoRequest(BaseModel):
+    background_file: str
+    audio_file: str
+    subtitles_file: str
+
 tasks: Dict[str, TaskStatus] = {}
-voice_client = WhisperTikTokClient()
+whisper_client = WhisperTikTokClient()
 
 def update_task_status(task_id: str, status: str, progress: int = 0, 
                        current_step: str = "", message: str = ""):
@@ -95,7 +108,7 @@ async def health_check():
 @app.get("/api/voices")
 async def get_voices(language: str = "all"):
     try:
-        voices = await voice_client.list_voices(language)
+        voices = await whisper_client.list_voices(language)
         return {"voices": voices}
     except httpx.HTTPStatusError as exc:
         status_code = exc.response.status_code if exc.response else 502
@@ -105,6 +118,142 @@ async def get_voices(language: str = "all"):
     except Exception as exc:
         logger.error("Failed to fetch voices: %s", exc, exc_info=True)
         raise HTTPException(status_code=502, detail="Unable to load voices")
+
+@app.post("/api/whisper/backgrounds/download")
+async def whisper_download_background(request: DownloadVideoRequest):
+    try:
+        return await whisper_client.download_video(request.url)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 502
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/backgrounds")
+async def whisper_available_backgrounds():
+    try:
+        payload = await whisper_client.available_backgrounds()
+        files = payload.get("backgrounds", [])
+        enriched = [
+            {
+                "name": name,
+                "local_path": str(whisper_client.shared_background_path(name)),
+                "exists": whisper_client.shared_background_path(name).exists(),
+            }
+            for name in files
+        ]
+        payload["items"] = enriched
+        return payload
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 502
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/backgrounds/{filename}")
+async def whisper_get_background(filename: str):
+    local_path = whisper_client.shared_background_path(filename)
+    if local_path.exists():
+        return FileResponse(str(local_path), media_type="video/mp4", filename=filename)
+    try:
+        response = await whisper_client.get_background(filename)
+        return Response(content=response.content, media_type="video/mp4")
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 404
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.post("/api/whisper/tts")
+async def whisper_generate_tts(request: GenerateTTSRequest):
+    if not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text is required for TTS")
+    try:
+        payload = await whisper_client.generate_tts(
+            request.text,
+            outfile=request.outfile,
+            voice=request.voice,
+        )
+        return payload
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 502
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/tts/{filename}")
+async def whisper_get_tts(filename: str):
+    local_path = whisper_client.shared_media_path(filename)
+    if local_path.exists():
+        return FileResponse(str(local_path), media_type="audio/mpeg", filename=filename)
+    try:
+        content = await whisper_client.get_tts(filename)
+        cache_path = whisper_client.cache_dir / filename
+        cache_path.write_bytes(content)
+        return FileResponse(str(cache_path), media_type="audio/mpeg", filename=filename)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 404
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/subtitles")
+async def whisper_get_subtitles(
+    filename: str,
+    model: str = "base",
+    non_english: bool = False,
+    uuid_value: Optional[str] = None,
+):
+    try:
+        payload = await whisper_client.get_subtitles(
+            filename=filename,
+            model=model,
+            non_english=non_english,
+            uuid_value=uuid_value,
+        )
+        return payload
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 502
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/subtitles/file/{uuid_value}")
+async def whisper_get_subtitles_file(uuid_value: str, kind: str = "ass"):
+    if kind not in {"ass", "vtt"}:
+        raise HTTPException(status_code=400, detail="Unsupported subtitle format")
+    if kind == "ass":
+        path = whisper_client.shared_media_path(f"{uuid_value}.ass")
+        media_type = "text/plain"
+    else:
+        path = whisper_client.cache_dir / f"{uuid_value}.vtt"
+        media_type = "text/vtt"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Subtitle file not found")
+    return FileResponse(str(path), media_type=media_type, filename=path.name)
+
+@app.post("/api/whisper/video")
+async def whisper_create_video(request: CreateVideoRequest):
+    try:
+        payload = await whisper_client.create_video(
+            background_file=request.background_file,
+            audio_file=request.audio_file,
+            subtitles_file=request.subtitles_file,
+        )
+        return payload
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 502
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
+
+@app.get("/api/whisper/video/{filename}")
+async def whisper_get_video(filename: str):
+    local_path = whisper_client.shared_background_path(filename)
+    if local_path.exists():
+        return FileResponse(str(local_path), media_type="video/mp4", filename=filename)
+    try:
+        content = await whisper_client.get_video(filename)
+        cache_path = whisper_client.cache_dir / filename
+        cache_path.write_bytes(content)
+        return FileResponse(str(cache_path), media_type="video/mp4", filename=filename)
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code if exc.response else 404
+        detail = exc.response.text if exc.response else str(exc)
+        raise HTTPException(status_code=code, detail=detail)
 
 @app.get("/")
 async def root():
