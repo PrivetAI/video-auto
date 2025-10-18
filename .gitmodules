@@ -1,0 +1,8 @@
+[submodule "fastapi-nextjs"]
+	path = fastapi-nextjs
+	url = https://github.com/PrivetAI/Whisper-TikTok.git
+	branch = fastapi-nextjs
+[submodule "whisper-tiktok"]
+	path = whisper-tiktok
+	url = https://github.com/PrivetAI/Whisper-TikTok.git
+	branch = fastapi-nextjs

@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide-to-Video Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header {
+      margin-bottom: 30px;
+      text-align: center;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #4CAF50;
+    }
+
+    fieldset {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    legend {
+      font-weight: bold;
+      font-size: 16px;
+      padding: 0 10px;
+      color: #4CAF50;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .slide {
+      background: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .slide h3 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 16px;
+      color: #555;
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .delete-btn {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .delete-btn:hover {
+      background: #cc0000;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .btn-primary {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #45a049;
+    }
+
+    .btn-secondary {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #0b7dda;
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+      color: white;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #addSlideBtn {
+      width: 100%;
+      background-color: #2196F3;
+      color: white;
+      padding: 12px;
+    }
+
+    #addSlideBtn:hover {
+      background-color: #0b7dda;
+    }
+
+    .section {
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+
+    .status-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+
+    .success-box {
+      background: #d4edda;
+      border: 1px solid #28a745;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+
+    .download-link {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 14px;
+      background: #4CAF50;
+      color: #fff;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .download-link:hover {
+      background: #3f8a44;
+    }
+
+    .error-box {
+      background: #f8d7da;
+      border: 1px solid #dc3545;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 15px 0;
+    }
+
+    details {
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 8px;
+      background: #eee;
+      border-radius: 4px;
+      margin: -10px;
+      margin-bottom: 10px;
+    }
+
+    summary:hover {
+      background: #e0e0e0;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .file-preview {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
+    }
+
+    .helper-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 3px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      header h1 {
+        font-size: 20px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎬 Slide-to-Video Generator</h1>
+      <p>Create vertical videos with voiceover and subtitles</p>
+    </header>
+
+    <form id="mainForm">
+      <!-- Project Section -->
+      <fieldset>
+        <legend>Project Settings</legend>
+        <label>
+          Project Name:
+          <input type="text" id="projectName" value="My Video" />
+        </label>
+        
+        <div class="form-row">
+          <label>
+            Language:
+            <select id="language">
+              <option value="en">English</option>
+              <option value="ru">Russian</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="zh">Chinese</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+            </select>
+          </label>
+          
+          <label>
+            Default Voice:
+            <select id="defaultVoice" data-default="en-US-ChristopherNeural">
+              <option value="">Loading voices...</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Output Filename:
+          <input type="text" id="outputFilename" value="output.mp4" />
+          <span class="helper-text">Will be saved to the 'output' folder</span>
+        </label>
+      </fieldset>
+
+      <!-- Slides Section -->
+      <fieldset>
+        <legend>Slides</legend>
+        <div id="slidesList"></div>
+        <button type="button" id="addSlideBtn">+ Add Slide</button>
+      </fieldset>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button type="button" id="generateBtn" class="btn-primary">Generate Video</button>
+        <button type="button" id="exportConfigBtn" class="btn-secondary">Export Config</button>
+      </div>
+    </form>
+
+    <!-- Status Section -->
+    <div id="statusSection" style="display:none;">
+      <div class="status-box">
+        <h3>⏳ Processing...</h3>
+        <p id="statusText">Preparing to generate video...</p>
+        <details>
+          <summary>View Configuration JSON</summary>
+          <pre id="configPreview"></pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- Success Section -->
+    <div id="successSection" style="display:none;">
+      <div class="success-box">
+        <h3>✅ Video Generated Successfully!</h3>
+        <p id="successText">Your video has been created and saved.</p>
+        <p><strong>Location:</strong> <code id="outputPath"></code></p>
+        <p id="downloadLinkWrapper" style="display:none;">
+          <a id="downloadLink" class="download-link" href="#" download>Download Video</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Error Section -->
+    <div id="errorSection" style="display:none;">
+      <div class="error-box">
+        <h3>❌ Error</h3>
+        <p id="errorText"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let slideCount = 0;
+    let availableVoices = [];
+    let voicesLoaded = false;
+
+    const FALLBACK_VOICES = [
+      { id: 'ru-RU-DmitryNeural', label: 'Dmitry (RU Male)', language: 'ru-RU', gender: 'Male' },
+    ];
+
+    // Initialize with one slide
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeVoices();
+      addSlide();
+      refreshVoiceSelectors();
+    });
+
+    // Add slide button
+    document.getElementById('addSlideBtn').addEventListener('click', () => {
+      addSlide();
+      refreshSlideVoiceSelectors();
+    });
+
+    // Generate button
+    document.getElementById('generateBtn').addEventListener('click', generateVideo);
+
+    // Export config button
+    document.getElementById('exportConfigBtn').addEventListener('click', exportConfig);
+
+    // Language change updates voice options
+    document.getElementById('language').addEventListener('change', refreshVoiceSelectors);
+
+    async function initializeVoices() {
+      try {
+        const response = await fetch('/api/voices?language=all');
+        if (!response.ok) {
+          throw new Error(`Status ${response.status}`);
+        }
+        const data = await response.json();
+        if (data && Array.isArray(data.voices) && data.voices.length > 0) {
+          availableVoices = data.voices.map((voice) => ({
+            id: voice.id || voice.name || voice.ShortName || '',
+            label: voice.label || voice.name || voice.id || '',
+            language: voice.language || voice.Locale || voice.locale || '',
+            gender: voice.gender || voice.Gender || ''
+          })).filter((voice) => voice.id);
+          voicesLoaded = true;
+          return;
+        }
+        throw new Error('Voice list empty');
+      } catch (error) {
+        console.warn('Using fallback voice list. Unable to fetch voices from API.', error);
+        availableVoices = [...FALLBACK_VOICES];
+        voicesLoaded = false;
+      }
+    }
+
+    function refreshVoiceSelectors() {
+      const language = document.getElementById('language').value || 'all';
+      const voicesForLanguage = getVoicesForLanguage(language);
+      populateDefaultVoiceSelect(voicesForLanguage);
+      refreshSlideVoiceSelectors(voicesForLanguage);
+    }
+
+    function getVoicesForLanguage(language) {
+      const voices = availableVoices.length > 0 ? availableVoices : FALLBACK_VOICES;
+      if (!language || language === 'all') {
+        return voices;
+      }
+      const matches = voices.filter((voice) => (voice.language || '').toLowerCase().startsWith(language.toLowerCase()));
+      return matches.length > 0 ? matches : voices;
+    }
+
+    function populateDefaultVoiceSelect(voices) {
+      const select = document.getElementById('defaultVoice');
+      if (!select) {
+        return;
+      }
+
+      const previousValue = select.value || select.dataset.selected || select.dataset.default || '';
+      select.innerHTML = '';
+
+      if (!voices || voices.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = voicesLoaded ? 'No voices available' : 'No fallback voices';
+        select.appendChild(option);
+        select.value = '';
+        select.dataset.selected = '';
+        return;
+      }
+
+      voices.forEach((voice) => {
+        const option = document.createElement('option');
+        option.value = voice.id;
+        option.textContent = formatVoiceLabel(voice);
+        select.appendChild(option);
+      });
+
+      const fallbackValue = voices.find((voice) => voice.id === previousValue)?.id || voices[0].id;
+      select.value = fallbackValue;
+      select.dataset.selected = fallbackValue;
+    }
+
+    function refreshSlideVoiceSelectors(voices) {
+      const voiceList = voices || getVoicesForLanguage(document.getElementById('language').value);
+      document.querySelectorAll('.slide-voice').forEach((selectEl) => {
+        populateVoiceSelect(selectEl, voiceList, true);
+      });
+    }
+
+    function populateVoiceSelect(selectEl, voices, includeDefaultOption) {
+      if (!selectEl) {
+        return;
+      }
+
+      const previousValue = selectEl.value;
+      selectEl.innerHTML = '';
+
+      if (includeDefaultOption) {
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Use default';
+        selectEl.appendChild(defaultOption);
+      }
+
+      if (!voices || voices.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = voicesLoaded ? 'No voices available' : 'No fallback voices';
+        selectEl.appendChild(option);
+        selectEl.value = '';
+        return;
+      }
+
+      voices.forEach((voice) => {
+        const option = document.createElement('option');
+        option.value = voice.id;
+        option.textContent = formatVoiceLabel(voice);
+        selectEl.appendChild(option);
+      });
+
+      if (previousValue && voices.some((voice) => voice.id === previousValue)) {
+        selectEl.value = previousValue;
+      } else {
+        selectEl.value = '';
+      }
+    }
+
+    function formatVoiceLabel(voice) {
+      const parts = [voice.label || voice.id];
+      if (voice.language) {
+        parts.push(voice.language);
+      }
+      if (voice.gender) {
+        parts.push(voice.gender);
+      }
+      return parts.join(' • ');
+    }
+
+    function addSlide() {
+      slideCount++;
+      const slideHTML = `
+        <div class="slide" data-slide-id="${slideCount}">
+          <div class="slide-header">
+            <h3>Slide ${slideCount}</h3>
+            <button type="button" class="delete-btn" onclick="deleteSlide(${slideCount})">✕ Remove</button>
+          </div>
+          
+          <label>
+            Image:
+            <input type="file" class="slide-image" accept="image/*" data-slide-id="${slideCount}" />
+            <span class="file-preview" id="preview-${slideCount}">No image selected</span>
+          </label>
+          
+          <label>
+            Narration Text:
+            <textarea class="slide-text" rows="3" placeholder="Enter the text to be narrated for this slide..."></textarea>
+          </label>
+          
+          <div class="form-row">
+            
+            <label>
+              Voice (optional):
+              <select class="slide-voice" data-slide="${slideCount}">
+                <option value="">Use default</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('slidesList').insertAdjacentHTML('beforeend', slideHTML);
+      
+      // Add file preview listener
+      const fileInput = document.querySelector(`input[data-slide-id="${slideCount}"]`);
+      fileInput.addEventListener('change', (e) => {
+        fileInput.dataset.uploadPath = '';
+        const preview = document.getElementById(`preview-${slideCount}`);
+        if (e.target.files.length > 0) {
+          preview.textContent = `Selected: ${e.target.files[0].name}`;
+          preview.style.color = '#4CAF50';
+        } else {
+          preview.textContent = 'No image selected';
+          preview.style.color = '#666';
+        }
+      });
+
+      const slideVoiceSelect = document.querySelector(`.slide-voice[data-slide="${slideCount}"]`);
+      populateVoiceSelect(slideVoiceSelect, getVoicesForLanguage(document.getElementById('language').value), true);
+    }
+
+    function deleteSlide(slideId) {
+      const slide = document.querySelector(`[data-slide-id="${slideId}"]`);
+      if (slide) {
+        slide.remove();
+      }
+      // Renumber remaining slides
+      renumberSlides();
+    }
+
+    function renumberSlides() {
+      const slides = document.querySelectorAll('.slide');
+      slides.forEach((slide, index) => {
+        const header = slide.querySelector('h3');
+        if (header) {
+          header.textContent = `Slide ${index + 1}`;
+        }
+      });
+    }
+
+    function collectData() {
+      const slides = [];
+      const slideElements = document.querySelectorAll('.slide');
+      
+      slideElements.forEach((slideEl) => {
+        const imageInput = slideEl.querySelector('.slide-image');
+        const text = slideEl.querySelector('.slide-text').value.trim();
+        const voice = slideEl.querySelector('.slide-voice').value;
+        
+        if (!text) {
+          return; // Skip slides without text
+        }
+        
+        const slideData = {
+          text: text,
+          source: imageInput.files.length > 0 || imageInput.dataset.uploadPath ? 'upload' : 'api',
+          voice: voice || document.getElementById('defaultVoice').value
+        };
+        
+        if (imageInput.files.length > 0) {
+          const file = imageInput.files[0];
+          slideData.imageFile = file;
+          slideData.image = file.name;
+        }
+        
+        if (imageInput.dataset.uploadPath) {
+          slideData.imagePath = imageInput.dataset.uploadPath;
+        }
+        
+        if (slideData.source === 'api') {
+          slideData.prompt = text.substring(0, 100);
+        }
+        
+        slides.push(slideData);
+      });
+      
+      return {
+        slides: slides,
+        language: document.getElementById('language').value,
+        voice: document.getElementById('defaultVoice').value,
+        output_filename: document.getElementById('outputFilename').value
+      };
+    }
+
+    function exportConfig() {
+      const config = collectData();
+      
+      if (config.slides.length === 0) {
+        showError('Please add at least one slide with text.');
+        return;
+      }
+      
+      // Create downloadable JSON file
+      const exportConfig = {
+        ...config,
+        slides: config.slides.map((slide) => {
+          const { imageFile, ...rest } = slide;
+          if (rest.source === 'upload') {
+            const filename = rest.image || (imageFile ? imageFile.name : undefined);
+            rest.image = filename || rest.imagePath || '';
+            rest.imagePath = rest.imagePath || (filename ? `./images/${filename}` : '');
+          }
+          return rest;
+        })
+      };
+      
+      const dataStr = JSON.stringify(exportConfig, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = 'slides_config.json';
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showStatus('Configuration exported successfully!');
+      document.getElementById('configPreview').textContent = dataStr;
+    }
+
+    async function generateVideo() {
+      const config = collectData();
+      
+      if (config.slides.length === 0) {
+        showError('Please add at least one slide with text.');
+        return;
+      }
+      
+      hideAllMessages();
+      showStatus('Preparing video data...');
+      document.getElementById('generateBtn').disabled = true;
+      
+      try {
+        const slidesPayload = [];
+        const slideElements = document.querySelectorAll('.slide');
+        
+        for (let i = 0; i < config.slides.length; i++) {
+          const slide = config.slides[i];
+          const slideEl = slideElements[i];
+          const payloadSlide = {
+            text: slide.text,
+            source: slide.source,
+            voice: slide.voice || config.voice
+          };
+          
+          if (slide.source === 'upload') {
+            const fileInput = slideEl.querySelector('.slide-image');
+            let uploadPath = slide.imagePath || fileInput.dataset.uploadPath || '';
+            
+            if (slide.imageFile instanceof File) {
+              updateStatusText(`Uploading image for slide ${i + 1}...`);
+              const uploadResult = await uploadSlideImage(slide.imageFile);
+              uploadPath = uploadResult.path;
+              fileInput.dataset.uploadPath = uploadPath;
+            }
+            
+            if (!uploadPath) {
+              throw new Error(`Slide ${i + 1} is missing an image. Please select an image file.`);
+            }
+            
+            payloadSlide.imagePath = uploadPath;
+          } else {
+            payloadSlide.prompt = slide.prompt || slide.text.substring(0, 100);
+          }
+          
+          slidesPayload.push(payloadSlide);
+        }
+        
+        const requestBody = {
+          slides: slidesPayload,
+          language: config.language,
+          voice: config.voice,
+          output_filename: config.output_filename || 'output.mp4'
+        };
+        
+        document.getElementById('configPreview').textContent = JSON.stringify(requestBody, null, 2);
+        updateStatusText('Starting video generation...');
+        
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to start video generation.');
+        }
+        
+        const result = await response.json();
+        if (!result.task_id) {
+          throw new Error('Video generation request did not return a task ID.');
+        }
+        
+        updateStatusText('Video generation in progress...');
+        await pollTaskStatus(result.task_id);
+        
+      } catch (error) {
+        console.error('Video generation failed:', error);
+        showError(error.message || 'Video generation failed.');
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+      }
+    }
+
+    function updateStatusText(message) {
+      const statusTextEl = document.getElementById('statusText');
+      if (statusTextEl) {
+        statusTextEl.textContent = message;
+      }
+    }
+
+    async function uploadSlideImage(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to upload image.');
+      }
+      
+      return response.json();
+    }
+
+    async function pollTaskStatus(taskId) {
+      const statusUrl = `/api/generate/${taskId}`;
+      const downloadUrl = `/api/download/${taskId}`;
+      
+      while (true) {
+        const response = await fetch(statusUrl);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Failed to retrieve video status.');
+        }
+        
+        const task = await response.json();
+        updateStatusFromTask(task);
+        
+        if (task.status === 'complete') {
+          showSuccess('Video generated successfully!', task.output_path || '', downloadUrl);
+          return;
+        }
+        
+        if (task.status === 'error' || task.status === 'cancelled') {
+          const message = task.message || 'Video generation failed.';
+          throw new Error(message);
+        }
+        
+        await delay(3000);
+      }
+    }
+
+    function updateStatusFromTask(task) {
+      const parts = [];
+      
+      if (typeof task.progress === 'number' && task.progress >= 0) {
+        parts.push(`Progress: ${task.progress}%`);
+      }
+      
+      if (task.current_step) {
+        parts.push(task.current_step);
+      }
+      
+      if (task.message) {
+        parts.push(task.message);
+      }
+      
+      const statusMessage = parts.length > 0 ? parts.join(' • ') : `Status: ${task.status}`;
+      updateStatusText(statusMessage);
+    }
+
+    function delay(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function showStatus(message) {
+      hideAllMessages();
+      document.getElementById('statusSection').style.display = 'block';
+      updateStatusText(message);
+    }
+
+    function showSuccess(message, outputPath, downloadUrl) {
+      hideAllMessages();
+      document.getElementById('successSection').style.display = 'block';
+      document.getElementById('successText').textContent = message;
+      document.getElementById('outputPath').textContent = outputPath;
+      
+      const linkWrapper = document.getElementById('downloadLinkWrapper');
+      const link = document.getElementById('downloadLink');
+      
+      if (downloadUrl) {
+        linkWrapper.style.display = 'block';
+        link.href = downloadUrl;
+      } else {
+        linkWrapper.style.display = 'none';
+        link.removeAttribute('href');
+      }
+    }
+
+    function showError(message) {
+      hideAllMessages();
+      document.getElementById('errorSection').style.display = 'block';
+      document.getElementById('errorText').textContent = message;
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        document.getElementById('errorSection').style.display = 'none';
+      }, 5000);
+    }
+
+    function hideAllMessages() {
+      document.getElementById('statusSection').style.display = 'none';
+      document.getElementById('successSection').style.display = 'none';
+      document.getElementById('errorSection').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

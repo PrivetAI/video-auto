@@ -1,0 +1,57 @@
+services:
+  # Our video generation service
+  backend:
+    build: ./backend
+    container_name: slide-video-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - WHISPER_TIKTOK_URL=http://whisper-tiktok:8001
+    volumes:
+      - ./backend:/app
+      - ./frontend:/frontend:ro
+      - ./output:/app/output
+      - ./cache:/app/cache
+      - shared-media:/shared/media
+      - shared-backgrounds:/shared/backgrounds
+    depends_on:
+      - whisper-tiktok
+    restart: unless-stopped
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  # Whisper-TikTok service for TTS and subtitle generation
+  whisper-tiktok:
+    build: ./whisper-tiktok
+    container_name: whisper-tiktok-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - shared-media:/app/media
+      - shared-backgrounds:/app/background
+      - whisper-output:/app/output
+    restart: unless-stopped
+    networks:
+      - app-network
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+          cpus: '4'
+
+volumes:
+  shared-media:
+  shared-backgrounds:
+  whisper-output:
+
+networks:
+  app-network:
+    driver: bridge
